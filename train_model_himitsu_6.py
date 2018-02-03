@@ -5,6 +5,7 @@ from keras.layers import Dense, Activation, Dropout
 from keras.optimizers import SGD
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import KFold
+import keras.backend as K
 import random
 import himitsu_data_gd_6
 import numpy as np
@@ -13,6 +14,33 @@ import gc
 #フォームによって収集した全データのインポート
 import collected_himitsu_data_6
 import collected_himitsu_sort
+
+
+#適合率計算の関数式    
+def precision_score(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+
+
+#再現率計算の関数式   
+def recall_score(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+    
+#F1値計算の関数式
+def f1_score(y_true, y_pred):
+    pre = precision_score(y_true, y_pred)
+    rec = recall_score(y_true, y_pred)
+    return 2 * pre * rec / (pre + rec)
+
+
+
+
+
 
 
 """データの読み込み"""
@@ -68,14 +96,20 @@ model.add(Activation("relu"))
 model.add(Dense(output_dim = out_num))
 model.add(Activation("sigmoid"))
 
-model.compile(loss="binary_crossentropy", optimizer=SGD(lr=0.1), metrics=['accuracy'])
+model.compile(loss="binary_crossentropy", optimizer=SGD(lr=0.1), metrics=['accuracy', precision_score, recall_score, f1_score])
 
 """交差検証"""
 kf = KFold(n_splits=5, shuffle=True)
 # 5回分のaccuracyの和を入れる(後で割る)
 sum_accuracy = 0
+sum_precision = 0
+sum_recall = 0
+sum_f1 = 0
 # 5回分のaccuracyを1つ1つ保存する
 accuracy = []
+precision = []
+recall = []
+f1 =[]
 # 交差検証
 for train_idx, val_idx in kf.split(X=x_data, y=y_data):
 	train_x, val_x = x_data[train_idx], x_data[val_idx]
@@ -85,15 +119,34 @@ for train_idx, val_idx in kf.split(X=x_data, y=y_data):
 	#評価
 	score = model.evaluate(val_x, val_t, verbose=0)
 	acc = score[1]
+	pre = score[2]
+	rec = score[3]
+	f   = score[4]
 
 	##評価値をリストに追加
 	accuracy.append(acc)
+	precision.append(pre)
+	recall.append(rec)
+	f1.append(f)
 	##今回の評価値を足す
 	sum_accuracy += acc
+	sum_precision += pre
+	sum_recall += rec
+	sum_f1 += f
 print('accuracy : {}'.format(accuracy))
+print('precision : {}'.format(precision))
+print('recall : {}'.format(recall))
+print('f1 : {}'.format(f1))
 # 5回分の評価値の平均
 sum_accuracy /= 5
+sum_precision /= 5
+sum_recall /= 5
+sum_f1 /= 5
+
 print('Kfold accuracy: {}'.format(sum_accuracy))
+print('Kfold precision: {}'.format(sum_precision))
+print('Kfold recall: {}'.format(sum_recall))
+print('Kfold f1: {}'.format(sum_f1))
 
 
 
