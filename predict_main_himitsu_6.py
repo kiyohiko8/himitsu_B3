@@ -65,8 +65,7 @@ def mk_user_know(himitsu):
 	cnt = 0
 	for item in a:
 		print(item)
-		print("これを知っていれば1, 知らなければ0を入力してください")
-		data = input()
+		data = input("これを知っていれば1, 知らなければ0を入力してください:")
 		while 0 < 1:
 			if data == str(0):
 				break
@@ -140,8 +139,8 @@ if __name__ == "__main__":
 	sorted   = collected_himitsu_sort.count_sort(collected, himitsu)
 	
 	#学習結果の読み込み：中のファイル名は学習済みのモデルおよびパラメータ
-	model = model_from_json(open('predict_model_himitsu_1.json').read())
-	model.load_weights('predict_weights_himitsu_1.h5')
+	model = model_from_json(open('predict_model_himitsu_4.json').read())
+	model.load_weights('predict_weights_himitsu_4.h5')
 	
 	#概要の出力
 	model.summary();
@@ -149,7 +148,7 @@ if __name__ == "__main__":
 
 	
 	while 0 < 1 :
-		print("これは手法Bによる推定器です")
+		print("これは手法Bによる推定器です\n")
 		#ユーザ入力部
 		wise_list = mk_user_know(himitsu)#修正後の入力法
 		#wise_list = mk_user_know(sorted)#修正前の入力法
